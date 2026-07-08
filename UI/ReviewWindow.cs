@@ -35,6 +35,9 @@ public sealed class ReviewWindow : Window
     {
         var includedCount = _pendingMods.Count - _skipped.Count;
         ImGui.TextUnformatted($"{_pendingMods.Count} changes ({includedCount} included, {_skipped.Count} skipped)");
+        ImGui.TextColored(new Vector4(0.7f, 0.7f, 0.7f, 1),
+            "Note: Penumbra doesn't expose folder deletion via its API - folders left empty after Apply " +
+            "must be deleted manually in Penumbra's own mod list (same as moving mods there by hand).");
 
         if (ImGui.Button("Select All"))
             _skipped.Clear();
