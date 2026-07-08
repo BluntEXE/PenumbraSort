@@ -9,6 +9,7 @@ namespace PenumbraSort.Ipc;
 
 public sealed class PenumbraIpc : IPenumbraIpc, IDisposable
 {
+    private readonly ApiVersion _apiVersion;
     private readonly GetModList _getModList;
     private readonly GetModPath _getModPath;
     private readonly SetModPath _setModPath;
@@ -24,6 +25,7 @@ public sealed class PenumbraIpc : IPenumbraIpc, IDisposable
 
     public PenumbraIpc(IDalamudPluginInterface pluginInterface)
     {
+        _apiVersion = new ApiVersion(pluginInterface);
         _getModList = new GetModList(pluginInterface);
         _getModPath = new GetModPath(pluginInterface);
         _setModPath = new SetModPath(pluginInterface);
@@ -43,7 +45,7 @@ public sealed class PenumbraIpc : IPenumbraIpc, IDisposable
         {
             try
             {
-                _getModList.Invoke();
+                _apiVersion.Invoke();
                 return true;
             }
             catch (IpcNotReadyError)
