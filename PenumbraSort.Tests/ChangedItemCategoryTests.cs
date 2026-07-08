@@ -100,12 +100,38 @@ public class ChangedItemCategoryTests
     {
         var items = new Dictionary<string, object?>
         {
+            ["Chest Piece A"] = null,
+            ["Chest Piece B"] = null,
+        };
+
+        var result = ChangedItemClassifier.Classify(items);
+        Assert.Equal(ChangedItemCategory.Top, result);
+    }
+
+    [Fact]
+    public void Classify_MultipleClothingSlotsNoMajority_ReturnsOutfit()
+    {
+        var items = new Dictionary<string, object?>
+        {
             ["Head"] = null,
             ["Hands"] = null,
         };
 
         var result = ChangedItemClassifier.Classify(items);
-        Assert.Equal(ChangedItemCategory.Top, result);
+        Assert.Equal(ChangedItemCategory.Outfit, result);
+    }
+
+    [Fact]
+    public void Classify_NonClothingNoMajority_ReturnsMixed()
+    {
+        var items = new Dictionary<string, object?>
+        {
+            ["Hair A"] = null,
+            ["Weapon"] = null,
+        };
+
+        var result = ChangedItemClassifier.Classify(items);
+        Assert.Equal(ChangedItemCategory.Mixed, result);
     }
 
     [Fact]

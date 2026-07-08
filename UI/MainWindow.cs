@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Windowing;
+using Dalamud.Plugin.Services;
 using PenumbraSort.Ipc;
 using PenumbraSort.ModTree;
 using PenumbraSort.Protection;
@@ -21,7 +22,9 @@ public sealed class MainWindow : Window
     private List<ModEntry> _mods = new();
     private SortStrategyKind _selectedStrategy;
 
-    public MainWindow(IPenumbraIpc ipc, ProtectionStore protection, PlanState planState, Configuration config, ReviewWindow reviewWindow)
+    private readonly IPluginLog _log;
+
+    public MainWindow(IPenumbraIpc ipc, ProtectionStore protection, PlanState planState, Configuration config, ReviewWindow reviewWindow, IPluginLog log)
         : base("PenumbraSort###PenumbraSortMain")
     {
         _ipc = ipc;
@@ -29,6 +32,7 @@ public sealed class MainWindow : Window
         _planState = planState;
         _config = config;
         _reviewWindow = reviewWindow;
+        _log = log;
         _selectedStrategy = config.LastStrategy;
     }
 
@@ -77,6 +81,10 @@ public sealed class MainWindow : Window
         {
             var (_, fullPath) = _ipc.GetModPath(kvp.Key, kvp.Value);
             var changedItems = _ipc.GetChangedItems(kvp.Key, kvp.Value);
+            var category = PenumbraSort.Sorting.ChangedItemClassifier.Classify(changedItems);
+            _log.Information(
+                "PenumbraSort scan: mod={ModName} category={Category} changedItems=[{Items}]",
+                kvp.Value, category, string.Join(", ", changedItems.Keys));
             return new ModEntry
             {
                 Directory = kvp.Key,

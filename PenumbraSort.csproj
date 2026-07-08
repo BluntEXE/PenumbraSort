@@ -1,7 +1,6 @@
 <Project Sdk="Dalamud.NET.Sdk/15.0.0">
 
 	<PropertyGroup>
-		<TargetFramework>net10.0-windows</TargetFramework>
 		<AssemblyName>PenumbraSort</AssemblyName>
 		<Title>PenumbraSort</Title>
 		<Authors>Ehno</Authors>
