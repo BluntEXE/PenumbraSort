@@ -32,6 +32,11 @@ public sealed class Plugin : IDalamudPlugin
         _protection.LoadFrom(_config.ProtectedModDirectories);
 
         _ipc = new PenumbraIpc(PluginInterface);
+
+        // TODO: SessionStore (PenumbraSort.Session.SessionStore) save/load of the in-progress
+        // proposal is intentionally NOT wired in here yet. Not required for a working /psort
+        // command. Wiring must wrap SessionStore.Load in try/catch: it deliberately throws on
+        // corrupt JSON or a missing target directory (see Session/SessionStore.cs).
         _mainWindow = new MainWindow(_ipc, _protection, _planState, _config);
         _reviewWindow = new ReviewWindow(_ipc);
 
