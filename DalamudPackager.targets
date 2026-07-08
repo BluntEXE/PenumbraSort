@@ -11,10 +11,10 @@
 			/>
 	</Target>
 
-	<!-- Rename latest.zip to StarfallStudio.zip so repo.json DownloadLink works
+	<!-- Rename latest.zip to $(AssemblyName).zip so repo.json DownloadLink works
 	     without a manual rename step in the deploy workflow. -->
 	<Target Name="RenamePluginZip" AfterTargets="PackagePlugin" Condition="'$(Configuration)' == 'Release'">
 		<Move SourceFiles="$(OutputPath)$(AssemblyName)\latest.zip"
-		      DestinationFiles="$(OutputPath)$(AssemblyName)\StarfallStudio.zip" />
+		      DestinationFiles="$(OutputPath)$(AssemblyName)\$(AssemblyName).zip" />
 	</Target>
 </Project>
