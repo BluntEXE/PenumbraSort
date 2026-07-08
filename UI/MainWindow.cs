@@ -64,11 +64,11 @@ public sealed class MainWindow : Window
         {
             ImGui.TableNextColumn();
             ImGui.TextUnformatted("Current");
-            DrawTree(ModTreeBuilder.Build(_mods, useProposedPath: false));
+            DrawTree(ModTreeBuilder.Build(_mods, useProposedPath: false), showProtectCheckbox: true);
 
             ImGui.TableNextColumn();
             ImGui.TextUnformatted("Proposed");
-            DrawTree(ModTreeBuilder.Build(_mods, useProposedPath: true));
+            DrawTree(ModTreeBuilder.Build(_mods, useProposedPath: true), showProtectCheckbox: false);
 
             ImGui.EndTable();
         }
@@ -139,23 +139,30 @@ public sealed class MainWindow : Window
         _config.Save();
     }
 
-    private void DrawTree(ModTreeNode node)
+    // showProtectCheckbox: protection is one shared piece of state per mod, not a
+    // per-pane concept, so the toggle is only drawn once (in the Current pane) to avoid
+    // showing the same checkbox twice for every mod across both trees.
+    private void DrawTree(ModTreeNode node, bool showProtectCheckbox)
     {
         foreach (var (name, child) in node.Children)
         {
             if (ImGui.TreeNode(name))
             {
-                DrawTree(child);
+                DrawTree(child, showProtectCheckbox);
                 ImGui.TreePop();
             }
         }
 
         foreach (var mod in node.Mods)
         {
-            var isProtected = mod.Protected;
-            if (ImGui.Checkbox($"##protect-{mod.Directory}", ref isProtected))
-                ToggleProtection(mod, isProtected);
-            ImGui.SameLine();
+            if (showProtectCheckbox)
+            {
+                var isProtected = mod.Protected;
+                if (ImGui.Checkbox($"##protect-{mod.Directory}", ref isProtected))
+                    ToggleProtection(mod, isProtected);
+                ImGui.SameLine();
+            }
+
             ImGui.TextUnformatted(mod.Name);
         }
     }

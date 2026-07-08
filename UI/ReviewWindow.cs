@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Windowing;
 using PenumbraSort.Backup;
@@ -32,18 +33,20 @@ public sealed class ReviewWindow : Window
 
     public override void Draw()
     {
-        foreach (var mod in _pendingMods)
+        var includedCount = _pendingMods.Count - _skipped.Count;
+        ImGui.TextUnformatted($"{_pendingMods.Count} changes ({includedCount} included, {_skipped.Count} skipped)");
+
+        if (ImGui.Button("Select All"))
+            _skipped.Clear();
+        ImGui.SameLine();
+        if (ImGui.Button("Skip All"))
         {
-            var skip = _skipped.Contains(mod.Directory);
-            if (ImGui.Checkbox($"##skip-{mod.Directory}", ref skip))
-            {
-                if (skip) _skipped.Add(mod.Directory);
-                else _skipped.Remove(mod.Directory);
-            }
-            ImGui.SameLine();
-            ImGui.TextUnformatted($"{mod.Name}: {mod.CurrentPath} -> {mod.ProposedPath}");
+            _skipped.Clear();
+            foreach (var mod in _pendingMods)
+                _skipped.Add(mod.Directory);
         }
 
+        ImGui.SameLine();
         if (ImGui.Button("Apply"))
             Apply();
 
@@ -51,12 +54,63 @@ public sealed class ReviewWindow : Window
         if (ImGui.Button("Restore Last Apply") && _snapshot.HasSnapshot)
             _snapshot.Restore(_ipc);
 
-        if (_lastApplyResults is not null)
+        ImGui.Separator();
+
+        if (ImGui.BeginChild("psort-review-scroll", new Vector2(0, -1)))
         {
-            ImGui.Separator();
-            foreach (var (directory, modName, result) in _lastApplyResults.Where(r => r.Result != PenumbraApiEc.Success))
-                ImGui.TextColored(new System.Numerics.Vector4(1, 0.4f, 0.4f, 1), $"{modName} ({directory}): {result}");
+            foreach (var group in GroupByTopLevelFolder(_pendingMods))
+            {
+                if (ImGui.CollapsingHeader($"{group.Key} ({group.Value.Count})###group-{group.Key}", ImGuiTreeNodeFlags.DefaultOpen))
+                {
+                    foreach (var mod in group.Value)
+                        DrawRow(mod);
+                }
+            }
+
+            if (_lastApplyResults is not null)
+            {
+                ImGui.Separator();
+                foreach (var (directory, modName, result) in _lastApplyResults.Where(r => r.Result != PenumbraApiEc.Success))
+                    ImGui.TextColored(new Vector4(1, 0.4f, 0.4f, 1), $"{modName} ({directory}): {result}");
+            }
         }
+
+        ImGui.EndChild();
+    }
+
+    private void DrawRow(ModEntry mod)
+    {
+        var skip = _skipped.Contains(mod.Directory);
+        if (ImGui.Checkbox($"##skip-{mod.Directory}", ref skip))
+        {
+            if (skip) _skipped.Add(mod.Directory);
+            else _skipped.Remove(mod.Directory);
+        }
+        ImGui.SameLine();
+        ImGui.TextUnformatted($"{mod.Name}: {mod.CurrentPath} -> {mod.ProposedPath}");
+    }
+
+    /// <summary>
+    /// Groups by the first path segment of each mod's proposed path - strategy-agnostic
+    /// (works whether the proposal came from ByType, ByCreator, Alphabetical, etc.) since it's
+    /// just the top-level folder the mod will actually land in.
+    /// </summary>
+    private static IEnumerable<KeyValuePair<string, List<ModEntry>>> GroupByTopLevelFolder(IEnumerable<ModEntry> mods)
+    {
+        var groups = new Dictionary<string, List<ModEntry>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var mod in mods)
+        {
+            var topLevel = mod.ProposedPath!.Split('/', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? mod.ProposedPath!;
+            if (!groups.TryGetValue(topLevel, out var list))
+            {
+                list = new List<ModEntry>();
+                groups[topLevel] = list;
+            }
+
+            list.Add(mod);
+        }
+
+        return groups.OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase);
     }
 
     private void Apply()
