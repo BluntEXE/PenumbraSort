@@ -17,16 +17,18 @@ public sealed class MainWindow : Window
     private readonly ProtectionStore _protection;
     private readonly PlanState _planState;
     private readonly Configuration _config;
+    private readonly ReviewWindow _reviewWindow;
     private List<ModEntry> _mods = new();
     private SortStrategyKind _selectedStrategy;
 
-    public MainWindow(IPenumbraIpc ipc, ProtectionStore protection, PlanState planState, Configuration config)
+    public MainWindow(IPenumbraIpc ipc, ProtectionStore protection, PlanState planState, Configuration config, ReviewWindow reviewWindow)
         : base("PenumbraSort###PenumbraSortMain")
     {
         _ipc = ipc;
         _protection = protection;
         _planState = planState;
         _config = config;
+        _reviewWindow = reviewWindow;
         _selectedStrategy = config.LastStrategy;
     }
 
@@ -44,6 +46,13 @@ public sealed class MainWindow : Window
 
         ImGui.SameLine();
         DrawStrategyDropdown();
+
+        ImGui.SameLine();
+        if (ImGui.Button("Review Changes"))
+        {
+            _reviewWindow.SetPending(_mods);
+            _reviewWindow.IsOpen = true;
+        }
 
         ImGui.Separator();
 

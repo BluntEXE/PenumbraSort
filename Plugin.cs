@@ -37,8 +37,8 @@ public sealed class Plugin : IDalamudPlugin
         // proposal is intentionally NOT wired in here yet. Not required for a working /psort
         // command. Wiring must wrap SessionStore.Load in try/catch: it deliberately throws on
         // corrupt JSON or a missing target directory (see Session/SessionStore.cs).
-        _mainWindow = new MainWindow(_ipc, _protection, _planState, _config);
         _reviewWindow = new ReviewWindow(_ipc);
+        _mainWindow = new MainWindow(_ipc, _protection, _planState, _config, _reviewWindow);
 
         _windowSystem.AddWindow(_mainWindow);
         _windowSystem.AddWindow(_reviewWindow);
