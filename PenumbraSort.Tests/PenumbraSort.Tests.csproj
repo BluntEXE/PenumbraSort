@@ -17,4 +17,15 @@
 		<ProjectReference Include="..\PenumbraSort.csproj" />
 	</ItemGroup>
 
+	<!-- Dalamud.NET.Sdk marks Dalamud assemblies as reference-only (not copied to output),
+	     since a real plugin runs inside a Dalamud host process that already provides them.
+	     Standalone `dotnet test` has no such host, so Configuration.cs's use of
+	     Dalamud.Plugin/Dalamud.Configuration types needs Dalamud.dll copied locally here. -->
+	<ItemGroup>
+		<Reference Include="Dalamud">
+			<HintPath>$(HOME)/.xlcore/dalamud/Hooks/dev/Dalamud.dll</HintPath>
+			<Private>true</Private>
+		</Reference>
+	</ItemGroup>
+
 </Project>
