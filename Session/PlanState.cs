@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace PenumbraSort.Session;
@@ -15,9 +16,11 @@ public sealed class PlanState
 
     public void Apply(IReadOnlyDictionary<string, string?> newProposal)
     {
+        ArgumentNullException.ThrowIfNull(newProposal);
+
         _undoStack.Push(Current);
         _redoStack.Clear();
-        Current = newProposal;
+        Current = new Dictionary<string, string?>(newProposal);
     }
 
     public void Undo()

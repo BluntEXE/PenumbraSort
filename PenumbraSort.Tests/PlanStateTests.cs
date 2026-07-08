@@ -88,7 +88,6 @@ public class PlanStateTests
         state.Undo();
         Assert.Equal("First", state.Current["d1"]);
         Assert.True(state.CanUndo);
-        Assert.False(state.CanUndo && state.Current.Count == 0);
 
         state.Redo();
         Assert.Equal("Second", state.Current["d1"]);
@@ -113,8 +112,14 @@ public class PlanStateTests
         state.Apply(new Dictionary<string, string?> { ["d1"] = "Fourth" });
 
         Assert.False(state.CanRedo);
-        state.Redo();
-        Assert.Equal("Fourth", state.Current["d1"]);
+
+        // Verify the undo history from before the deep-undo wasn't corrupted:
+        // walking back from Fourth should reach First, then the initial empty state.
+        state.Undo();
+        Assert.Equal("First", state.Current["d1"]);
+        state.Undo();
+        Assert.False(state.CanUndo);
+        Assert.Empty(state.Current);
     }
 
     [Fact]
@@ -127,5 +132,19 @@ public class PlanStateTests
 
         Assert.False(state.CanUndo);
         Assert.Empty(state.Current);
+    }
+
+    [Fact]
+    public void Apply_CopiesInputDictionary_MutatingOriginalAfterwardDoesNotAffectCurrent()
+    {
+        var state = new PlanState();
+        var original = new Dictionary<string, string?> { ["d1"] = "First" };
+
+        state.Apply(original);
+        original["d1"] = "Mutated";
+        original["d2"] = "Injected";
+
+        Assert.Equal("First", state.Current["d1"]);
+        Assert.False(state.Current.ContainsKey("d2"));
     }
 }
