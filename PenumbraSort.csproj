@@ -23,4 +23,8 @@
 		<PackageReference Include="Penumbra.Api" Version="5.15.1" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<Compile Remove="PenumbraSort.Tests/**/*.cs" />
+	</ItemGroup>
+
 </Project>
