@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using PenumbraSort.ModTree;
 
 namespace PenumbraSort.Protection;
@@ -26,7 +27,7 @@ public sealed class ProtectionStore
             Unprotect(mod.Directory);
     }
 
-    public IReadOnlySet<string> Snapshot() => _protected;
+    public IReadOnlySet<string> Snapshot() => _protected.ToHashSet(_protected.Comparer);
 
     public void LoadFrom(IEnumerable<string> directories)
     {

@@ -109,6 +109,20 @@ public class ProtectionStoreTests
     }
 
     [Fact]
+    public void Snapshot_MutatingReturnedSet_DoesNotAffectStore()
+    {
+        var store = new ProtectionStore();
+        store.Protect("d1");
+
+        var snapshot = (HashSet<string>)store.Snapshot();
+        snapshot.Add("d2");
+        snapshot.Remove("d1");
+
+        Assert.True(store.IsProtected("d1"));
+        Assert.False(store.IsProtected("d2"));
+    }
+
+    [Fact]
     public void ProtectFolder_OnEmptyNode_ProtectsNothing()
     {
         var store = new ProtectionStore();
