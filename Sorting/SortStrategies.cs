@@ -47,8 +47,11 @@ public static partial class SortStrategies
                 SortStrategyKind.TypeThenCreator => $"{Category(mod)}/{Creator(mod)}/{mod.Name}",
                 SortStrategyKind.CreatorThenType => $"{Creator(mod)}/{Category(mod)}/{mod.Name}",
                 SortStrategyKind.Alphabetical => $"{FirstLetterBucket(mod.Name)}/{mod.Name}",
+                // Intentional no-op for now: normalizing/deduping the existing tree is a
+                // later task's concern, not this one.
                 SortStrategyKind.PreserveAndClean => mod.CurrentPath,
-                SortStrategyKind.Custom => null, // handled by ApplyCustom
+                SortStrategyKind.Custom => throw new InvalidOperationException(
+                    $"{nameof(SortStrategyKind.Custom)} requires a template string; call {nameof(ApplyCustom)} instead of {nameof(Apply)}."),
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
             };
 

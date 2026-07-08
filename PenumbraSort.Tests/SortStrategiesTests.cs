@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using PenumbraSort.ModTree;
@@ -168,5 +169,26 @@ public class SortStrategiesTests
         var unsorted = SortStrategies.Unsorted(mods).ToList();
 
         Assert.Empty(unsorted);
+    }
+
+    [Fact]
+    public void Apply_Custom_ThrowsInsteadOfSilentlyReturningNoProposal()
+    {
+        var mods = new List<ModEntry> { Mod("d1", "Mod1", "Root/Mod1") };
+
+        Assert.Throws<InvalidOperationException>(() => SortStrategies.Apply(SortStrategyKind.Custom, mods));
+    }
+
+    [Fact]
+    public void ByCreator_NestedBracketsTruncateAtFirstCloseBracket()
+    {
+        // Documents current (limited) behavior: the creator regex stops at the first
+        // ']', so a name like "[Foo [EN] Studio] Cool Hair" yields a mangled creator
+        // rather than "Foo [EN] Studio". Not fixed here — rare real-world case.
+        var mods = new List<ModEntry> { Mod("d1", "[Foo [EN] Studio] Cool Hair", "Root/Cool Hair") };
+
+        var proposal = SortStrategies.Apply(SortStrategyKind.ByCreator, mods);
+
+        Assert.Equal("Foo [EN/[Foo [EN] Studio] Cool Hair", proposal["d1"]);
     }
 }
