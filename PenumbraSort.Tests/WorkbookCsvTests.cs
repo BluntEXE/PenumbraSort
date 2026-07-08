@@ -151,14 +151,11 @@ public class WorkbookCsvTests
         }
     }
 
-    // Design decision (flagged, not silently changed): a row with the wrong field
-    // count (e.g. hand-edited CSV that drops a comma) is dropped entirely - it shows
-    // up in neither Applied nor Skipped. This differs from the live-mod-list mismatch
-    // case, which is surfaced via Skipped with a reason. A user who mangles the CSV by
-    // hand gets no feedback that a row silently vanished. If that's undesirable, malformed
-    // rows should also be routed into Skipped with a "malformed row" reason.
+    // A row with the wrong field count (e.g. hand-edited CSV that drops a comma) is
+    // routed into Skipped with a reason, same as a live-mod-list mismatch, so the user
+    // gets a visible count instead of a row silently vanishing from both lists.
     [Fact]
-    public void Import_MalformedRow_IsSilentlyDroppedNotReportedAsSkipped()
+    public void Import_MalformedRow_IsRoutedToSkippedWithReason()
     {
         var path = Path.Combine(Path.GetTempPath(), $"psort-csv-{Guid.NewGuid():N}.csv");
         try
@@ -168,7 +165,57 @@ public class WorkbookCsvTests
             var result = WorkbookCsv.Import(path, new Dictionary<string, string> { ["d1"] = "MissingThirdField" });
 
             Assert.Empty(result.Applied);
-            Assert.Empty(result.Skipped);
+            Assert.Single(result.Skipped);
+            Assert.Equal("d1", result.Skipped[0].Row.ModDirectory);
+            Assert.Contains("Malformed", result.Skipped[0].Reason);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void ExportThenImport_RoundTripsTrailingEmptyField()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"psort-csv-{Guid.NewGuid():N}.csv");
+        try
+        {
+            File.WriteAllText(path, "ModDirectory,ModName,ProposedPath\nd1,Name,\n");
+
+            var result = WorkbookCsv.Import(path, new Dictionary<string, string> { ["d1"] = "Name" });
+
+            Assert.Single(result.Applied);
+            Assert.Equal(string.Empty, result.Applied[0].ProposedPath);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    // A stray, unescaped quote in the middle of a field (not produced by our own
+    // Export, but possible if a user hand-edits the CSV) used to flip the parser into
+    // quote mode mid-field, swallowing the closing quote and silently merging the
+    // following comma into the field value instead of splitting on it. That produced
+    // exactly 3 wrongly-merged fields, so the row parsed "successfully" with corrupted
+    // data and no signal to the user. Quotes are now only treated as field delimiters
+    // at the start of a field, so the same input instead splits into 4 raw fields and
+    // is correctly caught by the field-count check and routed to Skipped - corruption
+    // becomes a visible "malformed row", not silent bad data.
+    [Fact]
+    public void Import_StrayMidFieldQuote_DoesNotMergeFollowingFieldIntoOne()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"psort-csv-{Guid.NewGuid():N}.csv");
+        try
+        {
+            File.WriteAllText(path, "ModDirectory,ModName,ProposedPath\nd1,A\"B,C\"D,E\n");
+
+            var result = WorkbookCsv.Import(path, new Dictionary<string, string> { ["d1"] = "AB,CD" });
+
+            Assert.Empty(result.Applied);
+            Assert.Single(result.Skipped);
+            Assert.Contains("Malformed", result.Skipped[0].Reason);
         }
         finally
         {

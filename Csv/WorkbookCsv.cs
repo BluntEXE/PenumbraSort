@@ -41,7 +41,14 @@ public static class WorkbookCsv
 
             var fields = ParseCsvLine(line);
             if (fields.Length != 3)
+            {
+                var malformed = new ImportRow(
+                    fields.Length > 0 ? fields[0] : string.Empty,
+                    fields.Length > 1 ? fields[1] : string.Empty,
+                    fields.Length > 2 ? fields[2] : string.Empty);
+                skipped.Add((malformed, $"Malformed CSV row (expected 3 fields, got {fields.Length})"));
                 continue;
+            }
 
             var row = new ImportRow(fields[0], fields[1], fields[2]);
 
@@ -92,7 +99,7 @@ public static class WorkbookCsv
             }
             else
             {
-                if (c == '"')
+                if (c == '"' && current.Length == 0)
                     inQuotes = true;
                 else if (c == ',')
                 {
