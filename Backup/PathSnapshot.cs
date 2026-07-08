@@ -23,6 +23,14 @@ public sealed class PathSnapshot
         }
     }
 
+    /// <summary>
+    /// Replays SetModPath for every captured entry to restore pre-Apply paths.
+    /// Intentionally does NOT clear the snapshot afterward: the captured paths remain
+    /// available for inspection or a repeat Restore call. Do not add an _entries.Clear()
+    /// here without checking callers that rely on this replay-ability.
+    /// Iterates in dictionary order; assumes Penumbra tolerates transient duplicate paths
+    /// during a multi-mod restore, or that restore order doesn't matter (unverified).
+    /// </summary>
     public IReadOnlyList<(string Directory, string ModName, PenumbraApiEc Result)> Restore(IPenumbraIpc ipc)
     {
         var results = new List<(string, string, PenumbraApiEc)>();
