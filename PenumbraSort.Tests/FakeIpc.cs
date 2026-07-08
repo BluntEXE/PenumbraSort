@@ -24,6 +24,13 @@ public sealed class FakeIpc : IPenumbraIpc
         _changedItems[directory] = changedItems ?? new Dictionary<string, object?>();
     }
 
+    public void RemoveMod(string directory)
+    {
+        _modNames.Remove(directory);
+        _modPaths.Remove(directory);
+        _changedItems.Remove(directory);
+    }
+
     public IReadOnlyDictionary<string, string> GetModList() => _modNames;
 
     public (PenumbraApiEc Code, string FullPath) GetModPath(string modDirectory, string modName)
