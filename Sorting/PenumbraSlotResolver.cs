@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace PenumbraSort.Sorting;
 
@@ -10,6 +11,12 @@ namespace PenumbraSort.Sorting;
 /// not part of the public Penumbra.Api package we depend on, so we can't reference them at
 /// compile time, but since the plugin runs in the same process we can inspect the live object).
 ///
+/// IIdentifiedObjectData.ToInternalObject() unwraps before we ever see it: for equipment it
+/// returns the raw EquipItem struct directly (its "Type" field, of type FullEquipType, is at
+/// the top level - there is no wrapping "Item" field), and for customization it returns a raw
+/// ValueTuple (Race, Gender, Type, Value) where "Type" is positionally element 3 (a
+/// CustomizeIndex), accessed via ITuple rather than a named field.
+///
 /// Penumbra itself marks unmapped equipment with FullEquipType.Unknown as an explicit
 /// placeholder - TryResolve treats that (and anything else it can't confidently read) as
 /// "no answer" (null) rather than guessing, so callers fall back to the name-based keyword
@@ -19,33 +26,28 @@ public static class PenumbraSlotResolver
 {
     public static ChangedItemCategory? TryResolve(object? changedItemValue)
     {
-        if (changedItemValue is null)
-            return null;
-
-        var valueType = changedItemValue.GetType();
-
-        // IdentifiedItem-shaped: public field "Item" of type EquipItem, itself has a public
-        // field "Type" of type FullEquipType.
-        var itemField = valueType.GetField("Item", BindingFlags.Public | BindingFlags.Instance);
-        if (itemField is not null)
+        switch (changedItemValue)
         {
-            var equipItem = itemField.GetValue(changedItemValue);
-            var equipTypeField = equipItem?.GetType().GetField("Type", BindingFlags.Public | BindingFlags.Instance);
-            if (equipTypeField?.GetValue(equipItem) is Enum equipType)
-                return MapFullEquipTypeName(equipType.ToString());
-        }
+            case null:
+                return null;
 
-        // IdentifiedCustomization-shaped: public field "Type" of type CustomizeIndex.
-        var customizeTypeField = valueType.GetField("Type", BindingFlags.Public | BindingFlags.Instance);
-        if (customizeTypeField is not null && customizeTypeField.FieldType.Name == "CustomizeIndex")
-        {
-            if (customizeTypeField.GetValue(changedItemValue) is Enum customizeType)
+            // IdentifiedCustomization.ToInternalObject() -> (Race, Gender, Type, Value).
+            case ITuple { Length: 4 } tuple when tuple[2] is Enum customizeType
+                && customizeType.GetType().Name == "CustomizeIndex":
                 return MapCustomizeIndexName(customizeType.ToString());
-        }
 
-        // Some other Identified* variant (Model/Name/Counter/Action/Emote) - none of these
-        // map to an equipment or customization slot, so there's nothing reliable to classify.
-        return null;
+            default:
+                // IdentifiedItem.ToInternalObject() -> the raw EquipItem struct, whose public
+                // "Type" field (FullEquipType) sits at the top level of the boxed value.
+                var typeField = changedItemValue.GetType().GetField("Type", BindingFlags.Public | BindingFlags.Instance);
+                if (typeField?.FieldType.Name == "FullEquipType" && typeField.GetValue(changedItemValue) is Enum equipType)
+                    return MapFullEquipTypeName(equipType.ToString());
+
+                // Some other Identified* variant (Model/Name/Counter/Action/Emote) - none of
+                // these map to an equipment or customization slot, so there's nothing reliable
+                // to classify.
+                return null;
+        }
     }
 
     /// <summary>
