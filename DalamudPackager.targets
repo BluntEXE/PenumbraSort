@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+	<Target Name="PackagePlugin" AfterTargets="Build">
+		<DalamudPackager
+			ProjectDir="$(ProjectDir)"
+			OutputPath="$(OutputPath)"
+			AssemblyName="$(AssemblyName)"
+			MakeZip="true"
+			ManifestType="json"
+			VersionComponents="3"
+			/>
+	</Target>
+
+	<!-- Rename latest.zip to StarfallStudio.zip so repo.json DownloadLink works
+	     without a manual rename step in the deploy workflow. -->
+	<Target Name="RenamePluginZip" AfterTargets="PackagePlugin" Condition="'$(Configuration)' == 'Release'">
+		<Move SourceFiles="$(OutputPath)$(AssemblyName)\latest.zip"
+		      DestinationFiles="$(OutputPath)$(AssemblyName)\StarfallStudio.zip" />
+	</Target>
+</Project>

@@ -1,0 +1,11 @@
+{
+  "Author": "Ehno",
+  "Name": "PenumbraSort",
+  "InternalName": "PenumbraSort",
+  "AssemblyVersion": "0.1.0.0",
+  "Description": "Reorganize Penumbra mod folders live via IPC, with sort strategies, protection, undo, and CSV export.",
+  "ApplicableVersion": "any",
+  "RepoUrl": "https://github.com/BluntEXE/PenumbraSort",
+  "DalamudApiLevel": 15,
+  "Punchline": "Reorganize Penumbra mod folders live via IPC, with sort strategies, protection, undo, and CSV export."
+}
