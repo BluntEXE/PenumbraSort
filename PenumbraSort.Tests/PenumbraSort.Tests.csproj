@@ -20,10 +20,20 @@
 	<!-- Dalamud.NET.Sdk marks Dalamud assemblies as reference-only (not copied to output),
 	     since a real plugin runs inside a Dalamud host process that already provides them.
 	     Standalone `dotnet test` has no such host, so Configuration.cs's use of
-	     Dalamud.Plugin/Dalamud.Configuration types needs Dalamud.dll copied locally here. -->
+	     Dalamud.Plugin/Dalamud.Configuration types needs Dalamud.dll copied locally here.
+	     This project uses plain Microsoft.NET.Sdk (not Dalamud.NET.Sdk), so DalamudLibPath
+	     isn't defined for us automatically; resolve it the same way Dalamud.NET.Sdk's own
+	     Sdk.props does, including the DALAMUD_HOME override for CI/other machines. -->
+	<PropertyGroup>
+		<DalamudLibPath Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
+		<DalamudLibPath Condition="$([MSBuild]::IsOSPlatform('Linux'))">$(HOME)/.xlcore/dalamud/Hooks/dev/</DalamudLibPath>
+		<DalamudLibPath Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(HOME)/Library/Application Support/XIV on Mac/dalamud/Hooks/dev/</DalamudLibPath>
+		<DalamudLibPath Condition="$(DALAMUD_HOME) != ''">$(DALAMUD_HOME)/</DalamudLibPath>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<Reference Include="Dalamud">
-			<HintPath>$(HOME)/.xlcore/dalamud/Hooks/dev/Dalamud.dll</HintPath>
+			<HintPath>$(DalamudLibPath)Dalamud.dll</HintPath>
 			<Private>true</Private>
 		</Reference>
 	</ItemGroup>
