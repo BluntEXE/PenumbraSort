@@ -27,7 +27,7 @@ Not yet submitted to the official Dalamud plugin repository (DalamudPluginsD17).
 1. In-game, open the Dalamud settings (`/xlsettings`) → **Experimental** tab
 2. Under **Custom Plugin Repositories**, paste:
    ```
-   https://raw.githubusercontent.com/BluntEXE/PenumbraSort/main/repo.json
+   https://raw.githubusercontent.com/BluntEXE/PenumbraSort/master/repo.json
    ```
 3. Save, then find **PenumbraSort** in the plugin installer (`/xlplugins`) under All Plugins and install it
 

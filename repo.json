@@ -15,7 +15,7 @@
       "utility",
       "mods"
     ],
-    "IconUrl": "https://raw.githubusercontent.com/BluntEXE/PenumbraSort/main/images/icon.png",
+    "IconUrl": "https://raw.githubusercontent.com/BluntEXE/PenumbraSort/master/images/icon.png",
     "DownloadLinkInstall": "https://github.com/BluntEXE/PenumbraSort/releases/download/v0.1.0/PenumbraSort.zip",
     "DownloadLinkUpdate": "https://github.com/BluntEXE/PenumbraSort/releases/download/v0.1.0/PenumbraSort.zip",
     "DownloadLinkTesting": "https://github.com/BluntEXE/PenumbraSort/releases/download/v0.1.0/PenumbraSort.zip"
