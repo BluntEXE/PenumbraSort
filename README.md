@@ -20,9 +20,20 @@ A [Dalamud](https://github.com/goatcorp/Dalamud) plugin for FFXIV that reorganiz
 
 Penumbra's public IPC has no folder-deletion or merge endpoint (confirmed by decompiling `Penumbra.dll` — only mod-level operations like `InstallMod`/`DeleteMod`/`SetModPath` exist). Penumbra's own UI can delete/merge folders because it has direct in-process access to its internal file system; a plugin cannot reach that. **Folders left empty after a sort must be deleted manually** in Penumbra's own mod list — this is not a bug, it's a hard API boundary.
 
+## Installation
+
+Not yet submitted to the official Dalamud plugin repository (DalamudPluginsD17). Install via a custom plugin repo instead:
+
+1. In-game, open the Dalamud settings (`/xlsettings`) → **Experimental** tab
+2. Under **Custom Plugin Repositories**, paste:
+   ```
+   https://raw.githubusercontent.com/BluntEXE/PenumbraSort/main/repo.json
+   ```
+3. Save, then find **PenumbraSort** in the plugin installer (`/xlplugins`) under All Plugins and install it
+
 ## Status
 
-Actively developed, 93 unit tests, used daily by the author. Not yet submitted to the official Dalamud plugin repository (DalamudPluginsD17) — install via a custom plugin repo pointing at this repository's `repo.json`, or build from source.
+Actively developed, 93 unit tests, used daily by the author.
 
 ## Building
 
