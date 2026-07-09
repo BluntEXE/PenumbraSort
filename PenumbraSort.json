@@ -6,6 +6,7 @@
   "Description": "Reorganize Penumbra mod folders live via IPC, with sort strategies, protection, undo, and CSV export. Note: Penumbra's API doesn't support deleting folders, so folders left empty after a sort must be removed manually in Penumbra's own mod list.",
   "ApplicableVersion": "any",
   "RepoUrl": "https://github.com/BluntEXE/PenumbraSort",
+  "IconUrl": "https://raw.githubusercontent.com/BluntEXE/PenumbraSort/main/images/icon.png",
   "DalamudApiLevel": 15,
   "Punchline": "Reorganize Penumbra mod folders live via IPC, with sort strategies, protection, undo, and CSV export."
 }

@@ -15,6 +15,8 @@ public sealed class Configuration : IPluginConfiguration
 
     public SortStrategyKind LastStrategy { get; set; } = SortStrategyKind.Manual;
 
+    public string CustomTemplate { get; set; } = "{Category}/{Creator}/{Name}";
+
     [NonSerialized]
     private IDalamudPluginInterface? _pluginInterface;
 

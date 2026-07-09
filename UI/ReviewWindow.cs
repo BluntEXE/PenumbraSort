@@ -54,7 +54,10 @@ public sealed class ReviewWindow : Window
             Apply();
 
         ImGui.SameLine();
-        if (ImGui.Button("Restore Last Apply") && _snapshot.HasSnapshot)
+        var restoreLabel = _snapshot.HasSnapshot
+            ? $"Restore Last Apply ({_snapshot.LayerCount})"
+            : "Restore Last Apply";
+        if (ImGui.Button(restoreLabel) && _snapshot.HasSnapshot)
             _snapshot.Restore(_ipc);
 
         ImGui.Separator();

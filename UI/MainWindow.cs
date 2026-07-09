@@ -19,12 +19,14 @@ public sealed class MainWindow : Window
     private readonly PlanState _planState;
     private readonly Configuration _config;
     private readonly ReviewWindow _reviewWindow;
+    private readonly string _sessionPath;
     private List<ModEntry> _mods = new();
     private SortStrategyKind _selectedStrategy;
+    private string _customTemplate;
 
     private readonly IPluginLog _log;
 
-    public MainWindow(IPenumbraIpc ipc, ProtectionStore protection, PlanState planState, Configuration config, ReviewWindow reviewWindow, IPluginLog log)
+    public MainWindow(IPenumbraIpc ipc, ProtectionStore protection, PlanState planState, Configuration config, ReviewWindow reviewWindow, IPluginLog log, string sessionPath)
         : base("PenumbraSort###PenumbraSortMain")
     {
         _ipc = ipc;
@@ -33,7 +35,18 @@ public sealed class MainWindow : Window
         _config = config;
         _reviewWindow = reviewWindow;
         _log = log;
+        _sessionPath = sessionPath;
         _selectedStrategy = config.LastStrategy;
+        _customTemplate = config.CustomTemplate;
+    }
+
+    public override void OnOpen()
+    {
+        if (!_ipc.IsAvailable)
+            return;
+
+        Scan();
+        ApplyStrategy(_selectedStrategy);
     }
 
     public override void Draw()
@@ -111,20 +124,46 @@ public sealed class MainWindow : Window
             }
             ImGui.EndCombo();
         }
+
+        if (_selectedStrategy == SortStrategyKind.Custom)
+        {
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(260);
+            if (ImGui.InputText("##customTemplate", ref _customTemplate, 256))
+                ApplyStrategy(SortStrategyKind.Custom);
+
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip("Placeholders: {Creator}, {Category}, {Name}\nExample: {Category}/{Creator}/{Name}");
+        }
     }
 
     private void ApplyStrategy(SortStrategyKind kind)
     {
-        if (kind == SortStrategyKind.Custom)
-            return; // Custom requires a template string from a future text-input UI; skip for now rather than crash on Apply's guard exception.
+        if (kind == SortStrategyKind.Custom && string.IsNullOrWhiteSpace(_customTemplate))
+            return; // no template entered yet - nothing to propose
 
-        var proposal = SortStrategies.Apply(kind, _mods);
+        var proposal = kind == SortStrategyKind.Custom
+            ? SortStrategies.ApplyCustom(_customTemplate, _mods)
+            : SortStrategies.Apply(kind, _mods);
+
         foreach (var mod in _mods)
             mod.ProposedPath = proposal.TryGetValue(mod.Directory, out var path) ? path : null;
 
-        _planState.Apply(proposal.ToDictionary(kv => kv.Key, kv => (string?)kv.Value));
+        var planStateProposal = proposal.ToDictionary(kv => kv.Key, kv => (string?)kv.Value);
+        _planState.Apply(planStateProposal);
+
+        try
+        {
+            SessionStore.Save(_sessionPath, planStateProposal);
+        }
+        catch (Exception ex)
+        {
+            _log.Warning(ex, "PenumbraSort: failed to save session to {Path}.", _sessionPath);
+        }
 
         _config.LastStrategy = kind;
+        if (kind == SortStrategyKind.Custom)
+            _config.CustomTemplate = _customTemplate;
         _config.Save();
     }
 

@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
@@ -13,6 +15,8 @@ namespace PenumbraSort;
 public sealed class Plugin : IDalamudPlugin
 {
     public string Name => "PenumbraSort";
+
+    private const string SessionFileName = "session.json";
 
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
@@ -34,12 +38,20 @@ public sealed class Plugin : IDalamudPlugin
 
         _ipc = new PenumbraIpc(PluginInterface);
 
-        // TODO: SessionStore (PenumbraSort.Session.SessionStore) save/load of the in-progress
-        // proposal is intentionally NOT wired in here yet. Not required for a working /pensort
-        // command. Wiring must wrap SessionStore.Load in try/catch: it deliberately throws on
-        // corrupt JSON or a missing target directory (see Session/SessionStore.cs).
+        var sessionPath = Path.Combine(PluginInterface.GetPluginConfigDirectory(), SessionFileName);
+        try
+        {
+            var savedProposal = SessionStore.Load(sessionPath);
+            if (savedProposal.Count > 0)
+                _planState.Apply(savedProposal);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "PenumbraSort: failed to load saved session from {Path}, starting fresh.", sessionPath);
+        }
+
         _reviewWindow = new ReviewWindow(_ipc);
-        _mainWindow = new MainWindow(_ipc, _protection, _planState, _config, _reviewWindow, Log);
+        _mainWindow = new MainWindow(_ipc, _protection, _planState, _config, _reviewWindow, Log, sessionPath);
 
         _windowSystem.AddWindow(_mainWindow);
         _windowSystem.AddWindow(_reviewWindow);

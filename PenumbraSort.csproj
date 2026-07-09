@@ -9,6 +9,7 @@
 		<PackageProjectUrl>https://github.com/BluntEXE/PenumbraSort</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/BluntEXE/PenumbraSort</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
+		<PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
 		<Version>0.1.0</Version>
 		<Nullable>enable</Nullable>
 		<LangVersion>preview</LangVersion>

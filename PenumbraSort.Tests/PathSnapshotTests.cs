@@ -86,7 +86,7 @@ public class PathSnapshotTests
     }
 
     [Fact]
-    public void Capture_CalledTwice_OverwritesPreviousSnapshotRatherThanAccumulating()
+    public void Capture_CalledTwice_AccumulatesLayersInsteadOfOverwriting()
     {
         var ipc = new FakeIpc();
         ipc.AddMod("d1", "Mod1", "Old/Mod1");
@@ -99,40 +99,64 @@ public class PathSnapshotTests
             new() { Directory = "d2", Name = "Mod2", CurrentPath = "Old/Mod2" },
         });
 
-        // Second capture only includes d1; d2 should no longer be part of the snapshot.
+        // Second capture only includes d1, but should be a NEW layer stacked on top,
+        // not a replacement - the d2 layer must still be reachable by a later Restore.
         snapshot.Capture(ipc, new List<ModEntry>
         {
             new() { Directory = "d1", Name = "Mod1", CurrentPath = "Old/Mod1" },
         });
 
-        var results = snapshot.Restore(ipc);
+        Assert.Equal(2, snapshot.LayerCount);
 
-        Assert.Single(results);
-        Assert.Equal("d1", results[0].Directory);
+        var firstRestore = snapshot.Restore(ipc);
+        Assert.Single(firstRestore);
+        Assert.Equal("d1", firstRestore[0].Directory);
+        Assert.Equal(1, snapshot.LayerCount);
+
+        var secondRestore = snapshot.Restore(ipc);
+        Assert.Equal(2, secondRestore.Count);
+        Assert.Contains(secondRestore, r => r.Directory == "d1");
+        Assert.Contains(secondRestore, r => r.Directory == "d2");
+        Assert.False(snapshot.HasSnapshot);
     }
 
     [Fact]
-    public void Restore_CalledTwice_ReplaysStaleSnapshotBothTimes()
+    public void Restore_StepsBackOneApplyAtATime_InsteadOfReplayingSameLayer()
     {
-        // Documents current behavior: Restore does not clear the snapshot afterward,
-        // so calling it again replays the same (now-stale) captured paths.
+        // This is the fix for the real incident: multiple sequential Applies used to
+        // strand every state but the very last one, because Restore replayed the same
+        // overwritable snapshot instead of consuming a stack of them.
         var ipc = new FakeIpc();
         ipc.AddMod("d1", "Mod1", "Old/Mod1");
         var mods = new List<ModEntry> { new() { Directory = "d1", Name = "Mod1", CurrentPath = "Old/Mod1" } };
 
         var snapshot = new PathSnapshot();
+
+        // Apply #1: Old -> New
         snapshot.Capture(ipc, mods);
-
         ipc.SetModPath("d1", "New/Mod1", "Mod1");
-        var firstRestore = snapshot.Restore(ipc);
-        Assert.Equal("Old/Mod1", ipc.GetModPath("d1", "Mod1").FullPath);
 
+        // Apply #2: New -> Another
+        snapshot.Capture(ipc, mods);
         ipc.SetModPath("d1", "Another/Mod1", "Mod1");
-        var secondRestore = snapshot.Restore(ipc);
 
-        Assert.True(snapshot.HasSnapshot);
+        Assert.Equal(2, snapshot.LayerCount);
+
+        // First restore undoes Apply #2, landing back on New/Mod1.
+        var firstRestore = snapshot.Restore(ipc);
         Assert.Single(firstRestore);
+        Assert.Equal("New/Mod1", ipc.GetModPath("d1", "Mod1").FullPath);
+        Assert.True(snapshot.HasSnapshot);
+
+        // Second restore undoes Apply #1, landing back on the original path.
+        var secondRestore = snapshot.Restore(ipc);
         Assert.Single(secondRestore);
+        Assert.Equal("Old/Mod1", ipc.GetModPath("d1", "Mod1").FullPath);
+        Assert.False(snapshot.HasSnapshot);
+
+        // A third restore has nothing left to consume - a no-op, not a replay.
+        var thirdRestore = snapshot.Restore(ipc);
+        Assert.Empty(thirdRestore);
         Assert.Equal("Old/Mod1", ipc.GetModPath("d1", "Mod1").FullPath);
     }
 }
