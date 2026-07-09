@@ -2,8 +2,8 @@
   {
     "Author": "Ehno",
     "Name": "PenumbraSort",
-    "Punchline": "Reorganize Penumbra mod folders live via IPC, with sort strategies, protection, undo, and CSV export.",
-    "Description": "Reorganize Penumbra mod folders live via IPC, with sort strategies, protection, undo, and CSV export. Note: Penumbra's API doesn't support deleting folders, so folders left empty after a sort must be removed manually in Penumbra's own mod list.",
+    "Punchline": "Turns a loose, unsorted mod list into a real folder structure - not for already-organized libraries.",
+    "Description": "Best for a loose, unsorted mod list - takes it from chaos to a reasonable folder structure in one pass. If you've already built your own folder scheme, this probably isn't for you: auto-categorization is based on equipment/customization data and won't reproduce a hand-tuned taxonomy, and animation/skeleton/UI/tool mods can't be auto-sorted at all (Penumbra doesn't expose that data). Always review before applying. Note: Penumbra's API doesn't support deleting folders, so folders left empty after a sort must be removed manually in Penumbra's own mod list.",
     "InternalName": "PenumbraSort",
     "AssemblyVersion": "0.1.0",
     "TestingAssemblyVersion": "0.1.0",

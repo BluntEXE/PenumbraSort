@@ -58,6 +58,12 @@ public sealed class MainWindow : Window
             return;
         }
 
+        ImGui.TextColored(new System.Numerics.Vector4(0.7f, 0.7f, 0.7f, 1),
+            "Best for a loose, unsorted mod list. If you already have a working folder structure, " +
+            "sorting may reorganize things you don't want touched - use Protect below, or check the Current " +
+            "pane against Proposed carefully before applying.");
+        ImGui.Separator();
+
         if (ImGui.Button("Scan My Mods"))
             Scan();
 

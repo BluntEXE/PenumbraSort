@@ -2,6 +2,14 @@
 
 A [Dalamud](https://github.com/goatcorp/Dalamud) plugin for FFXIV that reorganizes your [Penumbra](https://github.com/xivdev/Penumbra) mod folders **live, in-game**, via Penumbra's IPC — no need to close the game or hand-edit Penumbra's config, unlike similar tools that only work offline.
 
+## Is this for you?
+
+**Yes, if:** your mod list is loose/unsorted — mods dumped flat with no real folder structure, and you don't already have a system.
+
+**Probably not, if:** you've already built a working folder structure you're happy with. PenumbraSort's automatic categorization is based on real equipment-slot/customization data, which is a different (and coarser) taxonomy than most hand-built schemes — running a bulk sort on an already-organized library is more likely to scramble it than improve it. Penumbra's own drag-and-drop is simpler for touch-ups to an existing structure.
+
+This tool gets you **most of the way** from chaos to something reasonable, automatically, in one pass. It does not (and can't) reproduce a bespoke, hand-tuned taxonomy — see Limitations below.
+
 ## Features
 
 - **Live scan** of your full Penumbra mod list, with side-by-side Current vs Proposed folder trees
@@ -16,9 +24,13 @@ A [Dalamud](https://github.com/goatcorp/Dalamud) plugin for FFXIV that reorganiz
 
 - `/pensort` — opens the PenumbraSort window
 
-## Known limitation
+## Limitations (read before running a sort)
 
-Penumbra's public IPC has no folder-deletion or merge endpoint (confirmed by decompiling `Penumbra.dll` — only mod-level operations like `InstallMod`/`DeleteMod`/`SetModPath` exist). Penumbra's own UI can delete/merge folders because it has direct in-process access to its internal file system; a plugin cannot reach that. **Folders left empty after a sort must be deleted manually** in Penumbra's own mod list — this is not a bug, it's a hard API boundary.
+- **No folder deletion.** Penumbra's public IPC has no folder-deletion or merge endpoint (confirmed by decompiling `Penumbra.dll` — only mod-level operations like `InstallMod`/`DeleteMod`/`SetModPath` exist). Penumbra's own UI can delete/merge folders because it has direct in-process access to its internal file system; a plugin cannot reach that. **Folders left empty after a sort must be deleted manually** in Penumbra's own mod list — this is not a bug, it's a hard API boundary.
+- **Non-appearance mods aren't classifiable.** Category detection reads Penumbra's `GetChangedItems` — equipment slots and body/face customization only. Idle/dance/emote animations, skeleton replacements, UI mods, and tool/utility mods (e.g. teleport plugins bundled as a "mod") change nothing Penumbra reports there, so they can't be auto-sorted and will land in `Uncategorized`/`Other`. Plan on filing those manually regardless of strategy.
+- **No per-character awareness.** Penumbra doesn't expose "this mod belongs to character X" as data — that's a Collections concept, separate from the mod list. If you organize by character, PenumbraSort can't detect or preserve that split automatically.
+- **Coarse category taxonomy.** The built-in categories (Hair, Face, Top, Bottom, Shoes, Weapon, Accessory, Outfit, Mixed, Uncategorized) are flat and equipment-slot-driven. Multi-piece outfits with no majority slot land in `Outfit` or `Mixed` rather than a specific slot — expect some manual cleanup after any bulk sort, especially on a large or eclectic library.
+- **Always review before Apply.** Nothing moves until you confirm in the Review screen. Use Protect on anything you don't want a sort strategy to ever touch.
 
 ## Installation
 
